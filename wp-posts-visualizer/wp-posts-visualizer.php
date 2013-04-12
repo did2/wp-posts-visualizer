@@ -46,6 +46,7 @@ function wppv_create_admin_page()
 <script type="text/javascript">
 window.addEventListener("load", function() {
 
+
 var resource = "<?php echo $wppv_plugin_url . $resource_name; ?>";
 var group_resource = "<?php echo $wppv_plugin_url . $groups_json; ?>";
 
@@ -56,68 +57,8 @@ var svg = d3.select("#canvas").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-var force = d3.layout.force()
-    .gravity(.4)
-    .linkDistance(30)
-    .charge(-500)
-    .size([width, height]);
 
-d3.json(resource, function(json) {
-  force
-      .nodes(json.nodes)
-      .links(json.links)
-      .start();
-
-var link = svg.selectAll(".link")
-	.data(json.links)
-	.enter().append("line")
-	.attr("class", "link");
-
-  var node = svg.selectAll(".node")
-      .data(json.nodes)
-    .enter().append("g")
-      .attr("class", "node")
-      .call(force.drag);
-
-	/*node.append("a")
-		.attr("href", function(d) { return d.url; } )
-  		.append("image")
-		.attr("xlink:href", "http://did2memo.net/wp-content/themes/elements-of-seo_1.4/favicon.ico")
-		.attr("x", -8)
-		.attr("y", -8)
-		.attr("width", 16)
-		.attr("height", 16);*/
-
-	var fill = d3.scale.category20();
-	node.append("circle")
-		.attr("r", 5)
-		.style("fill", function(d) { return fill(d.catnum); });
-
-  /*
-  node.append("circle")
-  	.attr("r", 5)
-  	.style("fill", function(d) { return color(d.group); });
-*/
-
-  node.append("text")
-      .attr("dx", 12)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name.substr(0, 10) + "..."; });
-
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
-
-    // nodes.forEach(function(node, i) {
-    // 	node.x += 
-    // 	node.y += 
-    // });
-    
-    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-  });
-});
+// category
 
 var groupForce = d3.layout.force()
     .gravity(.03)
@@ -125,47 +66,117 @@ var groupForce = d3.layout.force()
     .charge(-1000)
     .size([width, height]);
 
-d3.json(group_resource, function(json) {
+var catNum_to_catNode = new Array();
+
+d3.json(group_resource, function(catData) {
 	groupForce
-		.nodes(json.nodes)
-		.links(json.links)
+		.nodes(catData.nodes)
+		.links(catData.links)
 		.start();
 
-var groupLink = svg.selectAll("group.link")
+	var groupLink = svg.selectAll("group.link")
+		.data(catData.links)
+		.enter().append("line")
+		.attr("class", "group.link");
+
+	var groupNode = svg.selectAll("group.node")
+		.data(catData.nodes).enter()
+		.append("g")
+		.attr("class", "group.node")
+		.attr("data-catnum", function (d, i) { return d.catnum })
+		.call(groupForce.drag);
+
+	groupForce.nodes().forEach(function(d, i) {
+		catNum_to_catNode[i] = d;
+	});
+
+	var fill = d3.scale.category20();
+	groupNode.append("circle")
+		.attr("r", 30)
+		.style("fill", function(d) { return fill(d.catnum); });
+
+	groupNode.append("text")
+		.attr("dx", 12)
+		.attr("dy", ".35em")
+		.text(function(d) { return d.name.substr(0, 10) + "..."; });
+
+	groupForce.on("tick", function() {
+		groupLink
+			.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; });
+	    
+	    groupNode.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+	});
+
+});
+
+
+// posts
+
+var force = d3.layout.force()
+    .gravity(.4)
+    .linkDistance(30)
+    .charge(-500)
+    .size([width, height]);
+
+var nodeData = null;
+var nodeToNodeData = null;
+d3.json(resource, function(json) {
+	// nodeData = json;
+	// nodeData.forEach(function(d, i) {
+
+	// });
+
+force
+	.nodes(json.nodes)
+	.links(json.links)
+	.start();
+
+var
+link = svg.selectAll(".link")
 	.data(json.links)
 	.enter().append("line")
-	.attr("class", "group.link");
+	.attr("class", "link");
 
-var groupNode = svg.selectAll("group.node")
-	.data(json.nodes)
-	.enter().append("g")
-	.attr("class", "group.node")
-	.call(groupForce.drag);
+var
+node = svg.selectAll(".node").data(json.nodes).enter()//;
+//node
+	.append("g")
+	.attr("class", "node")
+	.attr("data-catnum", function (d, i) { return d.catnum; })
+	.call(force.drag);
 
 var fill = d3.scale.category20();
-	groupNode.append("circle")
-	.attr("r", 30)
-	.style("fill", function(d) { return fill(d.catnum); });
+node//.select("g")
+		.append("circle")
+			.attr("r", 5)
+			.style("fill", function(d) { return fill(d.catnum); });
 
-  groupNode.append("text")
-      .attr("dx", 12)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name.substr(0, 10) + "..."; });
+node//.select("g")
+		.append("text")
+			.attr("dx", 12)
+			.attr("dy", ".35em")
+			.text(function(d) { return d.name.substr(0, 10) + "..."; });
 
-  groupForce.on("tick", function() {
-    groupLink.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+force.on("tick", function() {
+	link
+		.attr("x1", function(d) { return d.source.x; })
+		.attr("y1", function(d) { return d.source.y; })
+		.attr("x2", function(d) { return d.target.x; })
+		.attr("y2", function(d) { return d.target.y; });
 
-    // nodes.forEach(function(node, i) {
-    // 	node.x += 
-    // 	node.y += 
-    // });
+	force.nodes().forEach(function(n, i) {
+    	var catNode = catNum_to_catNode[n.catnum];
+		n.x += (catNode.x - n.x) * 0.01 * force.alpha();
+		n.y += (catNode.y - n.y) * 0.01 * force.alpha();
+	});
     
-    groupNode.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
   });
 });
+
 
 
 });
