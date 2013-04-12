@@ -63,7 +63,7 @@ var svg = d3.select("#canvas").append("svg")
 var groupForce = d3.layout.force()
     .gravity(.03)
     .linkDistance(150)
-    .charge(-1000)
+    .charge(-200)
     .size([width, height]);
 
 var catNum_to_catNode = new Array();
@@ -92,7 +92,7 @@ d3.json(group_resource, function(catData) {
 
 	var fill = d3.scale.category20();
 	groupNode.append("circle")
-		.attr("r", 30)
+		.attr("r", 0)
 		.style("fill", function(d) { return fill(d.catnum); });
 
 	groupNode.append("text")
@@ -116,9 +116,9 @@ d3.json(group_resource, function(catData) {
 // posts
 
 var force = d3.layout.force()
-    .gravity(.4)
+    .gravity(.2)
     .linkDistance(30)
-    .charge(-500)
+    .charge(-1000)
     .size([width, height]);
 
 var nodeData = null;
@@ -161,20 +161,29 @@ node//.select("g")
 			.text(function(d) { return d.name.substr(0, 10) + "..."; });
 
 force.on("tick", function() {
+	force.nodes().forEach(function(d, i) {
+		var catNode = catNum_to_catNode[d.catnum];
+		dx = catNode.x - d.x;
+		dy = catNode.y - d.y;
+		powx = dx * 1.5 * force.alpha();
+		powy = dy * 1.5 * force.alpha();
+		d.x += powx; //(dx > 30) ? powx : powx * force.alpha();
+		d.y += powy; //(dy > 30) ? powy : powy * force.alpha();
+	});
+
 	link
 		.attr("x1", function(d) { return d.source.x; })
 		.attr("y1", function(d) { return d.source.y; })
 		.attr("x2", function(d) { return d.target.x; })
 		.attr("y2", function(d) { return d.target.y; });
-
-	force.nodes().forEach(function(n, i) {
-    	var catNode = catNum_to_catNode[n.catnum];
-		n.x += (catNode.x - n.x) * 0.01 * force.alpha();
-		n.y += (catNode.y - n.y) * 0.01 * force.alpha();
-	});
     
     node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
   });
+
+// force.nodes().forEach(function(d, i) {
+// 	groupForce.links().push({})
+// });
+
 });
 
 
