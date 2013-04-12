@@ -50,16 +50,16 @@ var resource = "<?php echo $wppv_plugin_url . $resource_name; ?>";
 var group_resource = "<?php echo $wppv_plugin_url . $groups_json; ?>";
 
 var width = 1960,
-    height = 1500
+    height = 1300
 
 var svg = d3.select("#canvas").append("svg")
     .attr("width", width)
     .attr("height", height);
 
 var force = d3.layout.force()
-    .gravity(.03)
-    .linkDistance(150)
-    .charge(-100)
+    .gravity(.4)
+    .linkDistance(30)
+    .charge(-500)
     .size([width, height]);
 
 d3.json(resource, function(json) {
@@ -68,10 +68,10 @@ d3.json(resource, function(json) {
       .links(json.links)
       .start();
 
-  var link = svg.selectAll(".link")
-      .data(json.links)
-    .enter().append("line")
-      .attr("class", "link");
+var link = svg.selectAll(".link")
+	.data(json.links)
+	.enter().append("line")
+	.attr("class", "link");
 
   var node = svg.selectAll(".node")
       .data(json.nodes)
@@ -118,42 +118,42 @@ d3.json(resource, function(json) {
     node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
   });
 });
-/*
+
 var groupForce = d3.layout.force()
     .gravity(.03)
     .linkDistance(150)
-    .charge(-100)
+    .charge(-1000)
     .size([width, height]);
 
 d3.json(group_resource, function(json) {
-  force
-      .nodes(json.nodes)
-      .links(json.links)
-      .start();
+	groupForce
+		.nodes(json.nodes)
+		.links(json.links)
+		.start();
 
-  var link = svg.selectAll(".link")
-      .data(json.links)
-    .enter().append("line")
-      .attr("class", "link");
+var groupLink = svg.selectAll("group.link")
+	.data(json.links)
+	.enter().append("line")
+	.attr("class", "group.link");
 
-  var node = svg.selectAll(".node")
-      .data(json.nodes)
-    .enter().append("g")
-      .attr("class", "node")
-      .call(force.drag);
+var groupNode = svg.selectAll("group.node")
+	.data(json.nodes)
+	.enter().append("g")
+	.attr("class", "group.node")
+	.call(groupForce.drag);
 
-	var fill = d3.scale.category20();
-	node.append("circle")
-		.attr("r", 30)
-		.style("fill", function(d) { return fill(d.catnum); });
+var fill = d3.scale.category20();
+	groupNode.append("circle")
+	.attr("r", 30)
+	.style("fill", function(d) { return fill(d.catnum); });
 
-  node.append("text")
+  groupNode.append("text")
       .attr("dx", 12)
       .attr("dy", ".35em")
       .text(function(d) { return d.name.substr(0, 10) + "..."; });
 
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
+  groupForce.on("tick", function() {
+    groupLink.attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
@@ -163,10 +163,10 @@ d3.json(group_resource, function(json) {
     // 	node.y += 
     // });
     
-    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    groupNode.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
   });
 });
-*/
+
 
 });
 </script>
